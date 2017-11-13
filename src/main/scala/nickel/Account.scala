@@ -5,11 +5,13 @@ import play.api.libs.json._
 case class Account(
   name: String
 ) {
-  lazy val valid: Boolean = name.nonEmpty
+  def validate: Either[String, Account] =
+    Right(this)
+      .filterOrElse(_.name.nonEmpty, "Account name must not be empty")
 }
 
 object Account {
-  implicit val format: OFormat[Account] = Json.format[Account]
+  implicit val format: OFormat[Account] = Json.format
 }
 
 case class StoredAccount(
@@ -18,12 +20,6 @@ case class StoredAccount(
 )
 
 object StoredAccount {
-  implicit val reads: Reads[StoredAccount] =
-    for {
-      id <- (JsPath \ "id").read[Id[Account]]
-      account <- Account.format
-    } yield StoredAccount(id, account)
-
   implicit def writes: OWrites[StoredAccount] = {
     case StoredAccount(id, account) =>
       Json.obj("id" -> id) ++ Account.format.writes(account)

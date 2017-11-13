@@ -1,8 +1,8 @@
 package nickel
 
-import play.api.libs.json._
-
 import scala.util.matching.Regex
+
+import play.api.libs.json._
 
 case class Money(cents: Int) extends AnyVal {
   override def toString: String = {
@@ -13,7 +13,7 @@ case class Money(cents: Int) extends AnyVal {
 }
 
 object Money {
-  val regex: Regex = raw"(0|(?:[1-9]\d*)\.(\d{2})".r
+  val regex: Regex = raw"(0|(?:[1-9]\d*))\.(\d{2})".r
 
   def parse(str: String): Option[Money] = {
     str match {

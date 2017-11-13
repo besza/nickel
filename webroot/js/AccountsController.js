@@ -1,14 +1,14 @@
 class AccountsController {
   constructor(ResourceService) {
-    this.ResourceService = ResourceService
+    this.resourceService = ResourceService
     this.resetInput()
-    this.ResourceService.getAllAccounts(accounts =>
+    this.resourceService.getAllAccounts(accounts =>
       this.accounts = accounts
     )
   }
 
   createAccount() {
-    this.ResourceService.createAccount(this.input, account => {
+    this.resourceService.createAccount(this.input, account => {
       this.accounts.push(account)
       this.resetInput()
     })

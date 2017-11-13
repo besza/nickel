@@ -1,0 +1,7 @@
+<select ng-model="$ctrl.selectedMonth" ng-change="$ctrl.monthSelected()">
+  <option ng-repeat="m in $ctrl.months">{{m}}</option>
+</select>
+
+<ul>
+  <li ng-repeat="t in $ctrl.transactions">{{t}}</li>
+</ul>
