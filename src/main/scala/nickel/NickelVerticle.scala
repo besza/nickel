@@ -21,7 +21,7 @@ class NickelVerticle extends ScalaVerticle {
 
     val jdbcClient = JDBCClient.createShared(vertx, jdbcConfig)
     val accountRepository = new AccountRepository(jdbcClient)
-    val transactionRepository = new TransactionRepository
+    val transactionRepository = new TransactionRepository(jdbcClient)
 
     val router = Router.router(vertx)
     new AccountController(router, accountRepository)
