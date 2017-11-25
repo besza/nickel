@@ -10,15 +10,16 @@ import io.vertx.scala.ext.web.handler.StaticHandler
 import org.flywaydb.core.Flyway
 
 class NickelVerticle extends ScalaVerticle {
-  val jdbcConfig: JsonObject = new JsonObject()
-    .put("url", "jdbc:hsqldb:mem:nickel")
-    .put("driver_class", "org.hsqldb.jdbc.JDBCDriver")
-
   override def startFuture(): Future[Unit] = {
+    val configuration = Configuration.fromSystem
+
     val flyway = new Flyway
-    flyway.setDataSource("jdbc:hsqldb:mem:nickel", "SA", "")
+    flyway.setDataSource(configuration.dbUrl, "SA", "")
     flyway.migrate()
 
+    val jdbcConfig: JsonObject = new JsonObject()
+      .put("url", configuration.dbUrl)
+      .put("driver_class", "org.hsqldb.jdbc.JDBCDriver")
     val jdbcClient = JDBCClient.createShared(vertx, jdbcConfig)
     val accountRepository = new AccountRepository(jdbcClient)
     val transactionRepository = new TransactionRepository(jdbcClient)
@@ -34,7 +35,7 @@ class NickelVerticle extends ScalaVerticle {
     vertx
       .createHttpServer()
       .requestHandler(router.accept)
-      .listenFuture(8666, "0.0.0.0")
+      .listenFuture(configuration.serverPort, configuration.serverHost)
       .map(_ => ())
   }
 }
