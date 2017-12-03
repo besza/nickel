@@ -27,7 +27,7 @@ class NewTransactionController {
       from: null,
       to: null,
       on: new Date(),
-      amount: 0,
+      amount: '',
       description: ''
     }
   }
