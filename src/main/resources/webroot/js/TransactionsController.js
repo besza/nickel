@@ -15,7 +15,11 @@ class TransactionsController {
 
   monthSelected() {
     this.resourceService.getTransactionsInMonth(this.selectedMonth, transactions =>
-      this.transactions = transactions
+      this.transactions = transactions.map(t => {
+        t.fromName = this.accounts.find(a => a.id == t.from).name
+        t.toName = this.accounts.find(a => a.id == t.to).name
+        return t
+      })
     )
   }
 }

@@ -2,6 +2,25 @@
   <option ng-repeat="m in $ctrl.months">{{m}}</option>
 </select>
 
-<ul>
-  <li ng-repeat="t in $ctrl.transactions">{{t}}</li>
-</ul>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Day of transaction</th>
+      <th>Source</th>
+      <th>Target</th>
+      <th>Amount</th>
+      <th>Description</th>
+      <th>Time of entry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="t in $ctrl.transactions">
+      <td>{{t.on}}</td>
+      <td>{{t.fromName}}</td>
+      <td>{{t.toName}}</td>
+      <td>{{t.amount}}</td>
+      <td>{{t.description}}</td>
+      <td>{{t.createdAt}}</td>
+    </tr>
+  </tbody>
+</table>
