@@ -14,7 +14,16 @@ class TransactionsController {
   }
 
   monthSelected() {
-    this.resourceService.getTransactionsInMonth(this.selectedMonth, transactions =>
+    this.fetchTransactions()
+  }
+
+  accountSelected() {
+    this.fetchTransactions()
+  }
+
+  fetchTransactions() {
+    let account = (this.selectedAccount == "") ? null : this.selectedAccount
+    this.resourceService.getTransactionsInMonth(this.selectedMonth, account, transactions =>
       this.transactions = transactions.map(t => {
         t.fromName = this.accounts.find(a => a.id == t.from).name
         t.toName = this.accounts.find(a => a.id == t.to).name

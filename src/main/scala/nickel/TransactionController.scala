@@ -3,8 +3,7 @@ package nickel
 import nickel.JsonImplicits._
 
 import scala.concurrent.ExecutionContext
-import scala.util.Try
-
+import scala.util.{Failure, Success, Try}
 import java.time.YearMonth
 
 import io.vertx.scala.ext.web.Router
@@ -18,11 +17,19 @@ class TransactionController(
     router,
     path = "/api/transactions",
     produceInput = { req =>
-      req.getParam("month")
-        .toRight("Missing parameter: month")
-        .flatMap { str => Try(YearMonth.parse(str)).toOption.toRight("Invalid month") }
+      for {
+        month <- req.getParam("month")
+          .toRight("Missing parameter: month")
+          .flatMap { str => Try(YearMonth.parse(str)).toOption.toRight("Invalid month") }
+        account <- req.getParam("account")
+          .map { str => Try(str.toLong) } match {
+          case Some(Success(id)) => Right(Some(Id[Account](id)))
+          case Some(Failure(_)) => Left("Invalid account id")
+          case None => Right(None)
+        }
+      } yield (month, account)
     },
-    produceOutput = transactionRepository.inMonth
+    produceOutput = (transactionRepository.inMonth _).tupled
   )
 
   Endpoint.post(

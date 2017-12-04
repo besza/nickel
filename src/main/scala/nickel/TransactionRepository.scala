@@ -10,13 +10,15 @@ import io.vertx.scala.ext.sql.{SQLClient, SQLOptions}
 
 class TransactionRepository(val sqlClient: SQLClient)(implicit val ec: ExecutionContext) {
 
-  def inMonth(month: YearMonth): Future[List[StoredTransaction]] =
+  def inMonth(month: YearMonth, account: Option[Id[Account]]): Future[List[StoredTransaction]] = {
+    val accountClause = account.map { _ => """AND ("from" = ? OR "to" = ?)""" }.getOrElse("")
+    val accountParams = account.map { id => new JsonArray().add(id.value).add(id.value) }.getOrElse(new JsonArray())
     sqlClient.queryWithParamsFuture(
-      """SELECT "id", "created_at", "from", "to", "on", "amount", "description" FROM "transaction"
-        |WHERE YEAR("on") = ? AND MONTH("on") = ?
+      s"""SELECT "id", "created_at", "from", "to", "on", "amount", "description" FROM "transaction"
+        |WHERE YEAR("on") = ? AND MONTH("on") = ? $accountClause
         |ORDER BY "on"
       """.stripMargin,
-      new JsonArray().add(month.getYear).add(month.getMonthValue)
+      new JsonArray().add(month.getYear).add(month.getMonthValue).addAll(accountParams)
     ).map { resultSet =>
       resultSet.getResults
         .map { row =>
@@ -34,6 +36,7 @@ class TransactionRepository(val sqlClient: SQLClient)(implicit val ec: Execution
         }
         .toList
     }
+  }
 
   def months: Future[List[YearMonth]] =
     sqlClient.queryFuture(
