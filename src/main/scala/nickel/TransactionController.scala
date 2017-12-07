@@ -39,6 +39,20 @@ class TransactionController(
     produceOutput = transactionRepository.create
   )
 
+  Endpoint.put(
+    router,
+    path = "/api/transactions/:id",
+    produceInput = { (req, transaction: Transaction) =>
+      for {
+        id <- req.getParam("id")
+          .flatMap { str => Try(str.toLong).toOption }
+          .toRight("Invalid id")
+        validTransaction <- transaction.validate
+      } yield (Id[Transaction](id), validTransaction)
+    },
+    produceOutput = (transactionRepository.update _).tupled
+  )
+
   Endpoint.get(
     router,
     path = "/api/transactions/months",

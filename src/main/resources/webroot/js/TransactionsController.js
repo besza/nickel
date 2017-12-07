@@ -21,14 +21,43 @@ class TransactionsController {
     this.fetchTransactions()
   }
 
+  editStarted(transaction) {
+    console.log(transaction)
+    this.editedId = transaction.id
+    this.edited = {
+      from: transaction.from.toString(),
+      to: transaction.to.toString(),
+      on: moment(transaction.on).toDate(),
+      amount: parseFloat(transaction.amount),
+      description: transaction.description
+    }
+  }
+
+  editSaved() {
+    this.resourceService.updateTransaction(this.editedId, this.edited, transaction => {
+
+      this.transactions = this.transactions.map(t => {
+        if (t.id == this.editedId) {
+          return this.decorateTransactionWithAccountName(transaction)
+        } else {
+          return t
+        }
+      })
+      this.editedId = "none"
+      this.edited = null
+    })
+  }
+
   fetchTransactions() {
     let account = (this.selectedAccount == "") ? null : this.selectedAccount
     this.resourceService.getTransactionsInMonth(this.selectedMonth, account, transactions =>
-      this.transactions = transactions.map(t => {
-        t.fromName = this.accounts.find(a => a.id == t.from).name
-        t.toName = this.accounts.find(a => a.id == t.to).name
-        return t
-      })
+      this.transactions = transactions.map(t => this.decorateTransactionWithAccountName(t))
     )
+  }
+
+  decorateTransactionWithAccountName(t) {
+    t.fromName = this.accounts.find(a => a.id == t.from).name
+    t.toName = this.accounts.find(a => a.id == t.to).name
+    return t
   }
 }

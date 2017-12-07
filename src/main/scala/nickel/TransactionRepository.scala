@@ -10,6 +10,29 @@ import io.vertx.scala.ext.sql.{SQLClient, SQLOptions}
 
 class TransactionRepository(val sqlClient: SQLClient)(implicit val ec: ExecutionContext) {
 
+  def single(id: Id[Transaction]): Future[Option[StoredTransaction]] =
+    sqlClient.queryWithParamsFuture(
+      s"""SELECT "id", "created_at", "from", "to", "on", "amount", "description" FROM "transaction"
+         |WHERE "id" = ?
+      """.stripMargin,
+      new JsonArray().add(id.value)
+    ).map { resultSet =>
+      resultSet.getResults.headOption
+        .map { row =>
+          StoredTransaction(
+            id = Id(row.getLong(0)),
+            createdAt = row.getInstant(1),
+            transaction = Transaction(
+              from = Id(row.getLong(2)),
+              to = Id(row.getLong(3)),
+              on = LocalDate.parse(row.getString(4), DateTimeFormatter.ISO_DATE),
+              amount = Money(row.getInteger(5)),
+              description = row.getString(6)
+            )
+          )
+        }
+    }
+
   def inMonth(month: YearMonth, account: Option[Id[Account]]): Future[List[StoredTransaction]] = {
     val accountClause = account.map { _ => """AND ("from" = ? OR "to" = ?)""" }.getOrElse("")
     val accountParams = account.map { id => new JsonArray().add(id.value).add(id.value) }.getOrElse(new JsonArray())
@@ -72,4 +95,24 @@ class TransactionRepository(val sqlClient: SQLClient)(implicit val ec: Execution
       transaction = transaction
     )
   }
+
+  def update(id: Id[Transaction], transaction: Transaction): Future[Option[StoredTransaction]] =
+    for {
+      result <- sqlClient.updateWithParamsFuture(
+        """UPDATE "transaction" SET "from" = ?, "to" = ?, "on" = ?, "amount" = ?, "description" = ?
+          |WHERE "id" = ?
+        """.stripMargin,
+        new JsonArray()
+          .add(transaction.from.value)
+          .add(transaction.to.value)
+          .add(transaction.on.atStartOfDay.toInstant(ZoneOffset.UTC))
+          .add(transaction.amount.cents)
+          .add(transaction.description)
+          .add(id.value)
+      )
+      stored <- result.getUpdated match {
+        case 0 => Future.successful(None)
+        case 1 => single(id)
+      }
+    } yield stored
 }

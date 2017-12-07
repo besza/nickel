@@ -36,9 +36,26 @@ class ResourceService {
   }
 
   createTransaction(transaction, onSuccess) {
-    this.http.post('api/transactions', transaction).then(
+    this.http.post('api/transactions', this.formatTransaction(transaction)).then(
       response => onSuccess(response.data),
       this.onFailure
     )
+  }
+
+  updateTransaction(id, transaction, onSuccess) {
+    this.http.put('api/transactions/' + id, this.formatTransaction(transaction)).then(
+      response => onSuccess(response.data),
+      this.onFailure
+    )
+  }
+
+  formatTransaction(transaction) {
+    return {
+      from: parseInt(transaction.from),
+      to: parseInt(transaction.to),
+      on: moment(transaction.on).format("YYYY-MM-DD"),
+      amount: transaction.amount.toFixed(2),
+      description: transaction.description.trim()
+    }
   }
 }

@@ -8,18 +8,9 @@ class NewTransactionController {
   }
 
   createTransaction() {
-    this.resourceService.createTransaction(
-      {
-        from: parseInt(this.input.from),
-        to: parseInt(this.input.to),
-        on: moment(this.input.on).format("YYYY-MM-DD"),
-        amount: this.input.amount.toFixed(2),
-        description: this.input.description.trim()
-      },
-      transaction => {
-        this.resetInput()
-      }
-    )
+    this.resourceService.createTransaction(this.input, transaction => {
+      this.resetInput()
+    })
   }
 
   resetInput() {
