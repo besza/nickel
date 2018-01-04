@@ -49,8 +49,9 @@ class TransactionsController {
   }
 
   fetchTransactions() {
+    let month = (this.selectedMonth == "") ? null : this.selectedMonth
     let account = (this.selectedAccount == "") ? null : this.selectedAccount
-    this.resourceService.getTransactionsInMonth(this.selectedMonth, account, transactions =>
+    this.resourceService.getTransactions(month, account, transactions =>
       this.transactions = transactions.map(t => this.decorateTransactionWithAccountName(t))
     )
   }

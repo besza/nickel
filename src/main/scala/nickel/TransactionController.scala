@@ -18,18 +18,11 @@ class TransactionController(
     path = "/api/transactions",
     produceInput = { req =>
       for {
-        month <- req.getParam("month")
-          .toRight("Missing parameter: month")
-          .flatMap { str => Try(YearMonth.parse(str)).toOption.toRight("Invalid month") }
-        account <- req.getParam("account")
-          .map { str => Try(str.toLong) } match {
-          case Some(Success(id)) => Right(Some(Id[Account](id)))
-          case Some(Failure(_)) => Left("Invalid account id")
-          case None => Right(None)
-        }
+        month <- req.getParam("month").tryOpt(YearMonth.parse, "Invalid month")
+        account <- req.getParam("account").tryOpt(str => Id[Account](str.toLong), "Invalid account id")
       } yield (month, account)
     },
-    produceOutput = (transactionRepository.inMonth _).tupled
+    produceOutput = (transactionRepository.filtered _).tupled
   )
 
   Endpoint.post(

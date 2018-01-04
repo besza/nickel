@@ -33,15 +33,31 @@ class TransactionRepository(val sqlClient: SQLClient)(implicit val ec: Execution
         }
     }
 
-  def inMonth(month: YearMonth, account: Option[Id[Account]]): Future[List[StoredTransaction]] = {
-    val accountClause = account.map { _ => """AND ("from" = ? OR "to" = ?)""" }.getOrElse("")
-    val accountParams = account.map { id => new JsonArray().add(id.value).add(id.value) }.getOrElse(new JsonArray())
+  def filtered(month: Option[YearMonth], account: Option[Id[Account]]): Future[List[StoredTransaction]] = {
+    val clausesParams = List(
+      month.map { m => (
+        """YEAR("on") = ? AND MONTH("on") = ?""",
+        new JsonArray().add(m.getYear).add(m.getMonthValue)
+      ) },
+      account.map { id => (
+        """("from" = ? OR "to" = ?)""",
+        new JsonArray().add(id.value).add(id.value)
+      ) }
+    )
+    val (whereClause, queryParams) = clausesParams.flatMap(_.toList).unzip match {
+      case (Nil, Nil) => ("", new JsonArray())
+      case (clauses, params) =>
+        val clause = s"""WHERE ${clauses.mkString(" AND ")}"""
+        val allParams = new JsonArray()
+        params.foreach(allParams.addAll)
+        (clause, allParams)
+    }
     sqlClient.queryWithParamsFuture(
       s"""SELECT "id", "created_at", "from", "to", "on", "amount", "description" FROM "transaction"
-        |WHERE YEAR("on") = ? AND MONTH("on") = ? $accountClause
+        |$whereClause
         |ORDER BY "on"
       """.stripMargin,
-      new JsonArray().add(month.getYear).add(month.getMonthValue).addAll(accountParams)
+      queryParams
     ).map { resultSet =>
       resultSet.getResults
         .map { row =>

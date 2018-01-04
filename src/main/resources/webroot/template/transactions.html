@@ -1,4 +1,5 @@
 <select ng-model="$ctrl.selectedMonth" ng-change="$ctrl.monthSelected()">
+  <option value="">All</option>
   <option ng-repeat="m in $ctrl.months">{{m}}</option>
 </select>
 <select ng-model="$ctrl.selectedAccount" ng-change="$ctrl.accountSelected()">

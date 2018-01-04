@@ -18,7 +18,7 @@ class ResourceService {
     )
   }
 
-  getTransactionsInMonth(month, account, onSuccess) {
+  getTransactions(month, account, onSuccess) {
     this.http.get(
       'api/transactions',
       { params: { month: month, account: account } }
