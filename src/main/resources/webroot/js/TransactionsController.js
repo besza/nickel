@@ -21,6 +21,12 @@ class TransactionsController {
     this.fetchTransactions()
   }
 
+  transactionDeleted(t) {
+    this.resourceService.deleteTransaction(t.id, () =>
+      this.transactions = this.transactions.filter(x => x.id != t.id)
+    )
+  }
+
   editStarted(transaction) {
     console.log(transaction)
     this.editedId = transaction.id

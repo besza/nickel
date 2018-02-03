@@ -131,4 +131,12 @@ class TransactionRepository(val sqlClient: SQLClient)(implicit val ec: Execution
         case 1 => single(id)
       }
     } yield stored
+
+  def delete(id: Id[Transaction]): Future[Boolean] =
+    for {
+      result <- sqlClient.updateWithParamsFuture(
+        """DELETE FROM "transaction" WHERE "id" = ?""",
+        new JsonArray().add(id.value)
+      )
+    } yield result.getUpdated > 0
 }

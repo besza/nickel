@@ -16,6 +16,7 @@
       <th>Amount</th>
       <th>Description</th>
       <th>Time of entry</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
@@ -53,6 +54,7 @@
 
       <td ng-if="t.id != $ctrl.editedId">
         <button ng-click="$ctrl.editStarted(t)">Edit</button>
+        <button ng-click="$ctrl.transactionDeleted(t)">Delete</button>
       </td>
       <td ng-if="t.id == $ctrl.editedId">
         <button ng-click="$ctrl.editSaved()">Save</button>

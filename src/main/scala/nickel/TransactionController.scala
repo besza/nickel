@@ -46,6 +46,17 @@ class TransactionController(
     produceOutput = (transactionRepository.update _).tupled
   )
 
+  Endpoint.delete(
+    router,
+    path = "/api/transactions/:id",
+    produceInput = { req =>
+      req.getParam("id")
+        .flatMap { str => Try(Id[Transaction](str.toLong)).toOption }
+        .toRight("Invalid id")
+    },
+    produceOutput = transactionRepository.delete
+  )
+
   Endpoint.get(
     router,
     path = "/api/transactions/months",

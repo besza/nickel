@@ -73,6 +73,20 @@ object Endpoint {
         }
       }
 
+  def delete[A](
+    router: Router,
+    path: String,
+    produceInput: HttpServerRequest => Either[String, A],
+    produceOutput: A => Future[Boolean]
+  )(implicit ec: ExecutionContext): Route =
+    router
+      .delete(path)
+      .produces("application/json")
+      .handler { ctx =>
+        val input = produceInput(ctx.request)
+        handleInputDel(ctx.response, input, produceOutput, 204)
+      }
+
   private def handleInput[A, B: Writes](
     response: HttpServerResponse,
     input: Either[String, A],
@@ -116,6 +130,31 @@ object Endpoint {
           case Success(None) =>
             response
               .setStatusCode(404)
+              .end()
+          case Failure(ex) =>
+            ex.printStackTrace()
+            response
+              .setStatusCode(500)
+              .end(ex.toString)
+        }
+      case Left(error) =>
+        response
+          .setStatusCode(400)
+          .end(error)
+    }
+
+  private def handleInputDel[A](
+    response: HttpServerResponse,
+    input: Either[String, A],
+    produceOutput: A => Future[Boolean],
+    successStatusCode: Int
+  )(implicit ec: ExecutionContext): Unit =
+    input match {
+      case Right(validInput) =>
+        produceOutput(validInput).onComplete {
+          case Success(found) =>
+            response
+              .setStatusCode(if (found) successStatusCode else 404)
               .end()
           case Failure(ex) =>
             ex.printStackTrace()

@@ -49,6 +49,13 @@ class ResourceService {
     )
   }
 
+  deleteTransaction(id, onSuccess) {
+    this.http.delete('api/transactions/' + id).then(
+      response => onSuccess(),
+      this.onFailure
+    )
+  }
+
   formatTransaction(transaction) {
     return {
       from: parseInt(transaction.from),
