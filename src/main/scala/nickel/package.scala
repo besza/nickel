@@ -1,3 +1,7 @@
+import slick.jdbc.HsqldbProfile.api._
+
+import java.sql.{Date, Timestamp}
+import java.time.{Instant, LocalDate}
 import scala.util.{Failure, Success, Try}
 
 package object nickel {
@@ -11,4 +15,13 @@ package object nickel {
        }
   }
 
+  implicit def idColumnType[T] = MappedColumnType.base[Id[T], Long](_.value, Id(_))
+  implicit val moneyColumnType = MappedColumnType.base[Money, Int](_.cents, Money(_))
+  implicit val instantColumnType = MappedColumnType.base[Instant, Timestamp](Timestamp.from, _.toInstant)
+  implicit val localDateColumnType = MappedColumnType.base[LocalDate, Date](Date.valueOf, _.toLocalDate)
+
+  object DbFun {
+    val year = SimpleFunction.unary[LocalDate, Int]("YEAR")
+    val month = SimpleFunction.unary[LocalDate, Int]("MONTH")
+  }
 }

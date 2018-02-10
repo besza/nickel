@@ -1,142 +1,75 @@
 package nickel
 
+import slick.jdbc.HsqldbProfile.api._
+
+import java.time.{Instant, LocalDate, YearMonth}
 import scala.concurrent.{ExecutionContext, Future}
 
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, LocalDate, YearMonth, ZoneOffset}
+private class TransactionTable(tag: Tag) extends Table[StoredTransaction](tag, "transaction") {
+  def id = column[Id[Transaction]]("id", O.PrimaryKey, O.AutoInc)
+  def createdAt = column[Instant]("created_at")
+  def from = column[Id[Account]]("from")
+  def to = column[Id[Account]]("to")
+  def on = column[LocalDate]("on")
+  def amount = column[Money]("amount")
+  def description = column[String]("description")
 
-import io.vertx.core.json.JsonArray
-import io.vertx.scala.ext.sql.{SQLClient, SQLOptions}
+  def * = (id, createdAt, from, to, on, amount, description) <> ((fromDb _).tupled, toDb)
+  def fromDb(id: Id[Transaction], createdAt: Instant, from: Id[Account], to: Id[Account], on: LocalDate,
+    amount: Money, description: String) =
+    StoredTransaction(id, createdAt, Transaction(from, to, on, amount, description))
+  def toDb(t: StoredTransaction) =
+    Some((t.id, t.createdAt, t.transaction.from, t.transaction.to, t.transaction.on,
+      t.transaction.amount, t.transaction.description))
+}
 
-class TransactionRepository(val sqlClient: SQLClient)(implicit val ec: ExecutionContext) {
+class TransactionRepository(database: Database)(implicit ec: ExecutionContext) {
+  private val table = TableQuery[TransactionTable]
+  private val insert =
+    table returning table.map(_.id) into
+    ((inserted, id) => StoredTransaction(id, inserted.createdAt, inserted.transaction))
 
   def single(id: Id[Transaction]): Future[Option[StoredTransaction]] =
-    sqlClient.queryWithParamsFuture(
-      s"""SELECT "id", "created_at", "from", "to", "on", "amount", "description" FROM "transaction"
-         |WHERE "id" = ?
-      """.stripMargin,
-      new JsonArray().add(id.value)
-    ).map { resultSet =>
-      resultSet.getResults.headOption
-        .map { row =>
-          StoredTransaction(
-            id = Id(row.getLong(0)),
-            createdAt = row.getInstant(1),
-            transaction = Transaction(
-              from = Id(row.getLong(2)),
-              to = Id(row.getLong(3)),
-              on = LocalDate.parse(row.getString(4), DateTimeFormatter.ISO_DATE),
-              amount = Money(row.getInteger(5)),
-              description = row.getString(6)
-            )
-          )
-        }
-    }
+    database.run { table.filter(_.id === id).result.headOption }
 
-  def filtered(month: Option[YearMonth], account: Option[Id[Account]]): Future[List[StoredTransaction]] = {
-    val clausesParams = List(
-      month.map { m => (
-        """YEAR("on") = ? AND MONTH("on") = ?""",
-        new JsonArray().add(m.getYear).add(m.getMonthValue)
-      ) },
-      account.map { id => (
-        """("from" = ? OR "to" = ?)""",
-        new JsonArray().add(id.value).add(id.value)
-      ) }
-    )
-    val (whereClause, queryParams) = clausesParams.flatMap(_.toList).unzip match {
-      case (Nil, Nil) => ("", new JsonArray())
-      case (clauses, params) =>
-        val clause = s"""WHERE ${clauses.mkString(" AND ")}"""
-        val allParams = new JsonArray()
-        params.foreach(allParams.addAll)
-        (clause, allParams)
-    }
-    sqlClient.queryWithParamsFuture(
-      s"""SELECT "id", "created_at", "from", "to", "on", "amount", "description" FROM "transaction"
-        |$whereClause
-        |ORDER BY "on"
-      """.stripMargin,
-      queryParams
-    ).map { resultSet =>
-      resultSet.getResults
-        .map { row =>
-          StoredTransaction(
-            id = Id(row.getLong(0)),
-            createdAt = row.getInstant(1),
-            transaction = Transaction(
-              from = Id(row.getLong(2)),
-              to = Id(row.getLong(3)),
-              on = LocalDate.parse(row.getString(4), DateTimeFormatter.ISO_DATE),
-              amount = Money(row.getInteger(5)),
-              description = row.getString(6)
-            )
-          )
-        }
-        .toList
-    }
+  def filtered(month: Option[YearMonth], account: Option[Id[Account]]): Future[Seq[StoredTransaction]] = {
+    val monthFiltered = month
+      .map { m => table.filter { t => DbFun.year(t.on) === m.getYear && DbFun.month(t.on) === m.getMonthValue } }
+      .getOrElse(table)
+    val accountFiltered = account
+      .map { a => monthFiltered.filter { t => t.from === a || t.to === a } }
+      .getOrElse(monthFiltered)
+    database.run { accountFiltered.result }
   }
 
-  def months: Future[List[YearMonth]] =
-    sqlClient.queryFuture(
-      """SELECT DISTINCT YEAR("on"), MONTH("on") FROM "transaction"
-        |ORDER BY YEAR("on"), MONTH("on")
-      """.stripMargin
-    ).map { resultSet =>
-      resultSet.getResults
-        .map { row => YearMonth.of(row.getInteger(0), row.getInteger(1)) }
-        .toList
+  def months: Future[Seq[YearMonth]] =
+    database.run {
+      table
+        .map { t => (DbFun.year(t.on), DbFun.month(t.on)) }
+        .distinct
+        .sorted
+        .result
+        .map(_.map { case (y, m) => YearMonth.of(y, m) })
     }
 
   def create(transaction: Transaction): Future[StoredTransaction] = {
     val createdAt = Instant.now
-    for {
-      conn <- sqlClient.getConnectionFuture
-      _ = conn.setOptions(SQLOptions().setAutoGeneratedKeys(true))
-      result <- conn.updateWithParamsFuture(
-        """INSERT INTO "transaction" ("created_at", "from", "to", "on", "amount", "description")
-          |VALUES (?, ?, ?, ?, ?, ?)
-        """.stripMargin,
-        new JsonArray()
-          .add(createdAt)
-          .add(transaction.from.value)
-          .add(transaction.to.value)
-          .add(transaction.on.atStartOfDay.toInstant(ZoneOffset.UTC))
-          .add(transaction.amount.cents)
-          .add(transaction.description)
-      )
-    } yield StoredTransaction(
-      id = Id(result.getKeys.getLong(0)),
-      createdAt = createdAt,
-      transaction = transaction
-    )
+    database.run { insert += StoredTransaction(Id(0), createdAt, transaction) }
   }
 
   def update(id: Id[Transaction], transaction: Transaction): Future[Option[StoredTransaction]] =
-    for {
-      result <- sqlClient.updateWithParamsFuture(
-        """UPDATE "transaction" SET "from" = ?, "to" = ?, "on" = ?, "amount" = ?, "description" = ?
-          |WHERE "id" = ?
-        """.stripMargin,
-        new JsonArray()
-          .add(transaction.from.value)
-          .add(transaction.to.value)
-          .add(transaction.on.atStartOfDay.toInstant(ZoneOffset.UTC))
-          .add(transaction.amount.cents)
-          .add(transaction.description)
-          .add(id.value)
-      )
-      stored <- result.getUpdated match {
-        case 0 => Future.successful(None)
-        case 1 => single(id)
+    database
+      .run {
+        table
+          .filter(_.id === id)
+          .map { t => (t.from, t.to, t.on, t.amount, t.description )}
+          .update((transaction.from, transaction.to, transaction.on, transaction.amount, transaction.description))
       }
-    } yield stored
+      .flatMap {
+        case 0 => Future.successful(None)
+        case _ => single(id)
+      }
 
   def delete(id: Id[Transaction]): Future[Boolean] =
-    for {
-      result <- sqlClient.updateWithParamsFuture(
-        """DELETE FROM "transaction" WHERE "id" = ?""",
-        new JsonArray().add(id.value)
-      )
-    } yield result.getUpdated > 0
+    database.run { table.filter(_.id === id).delete.map(_ > 0) }
 }
