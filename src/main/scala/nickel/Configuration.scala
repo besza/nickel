@@ -1,17 +1,38 @@
 package nickel
 
-import scala.util.Try
+import com.typesafe.config.ConfigFactory
 
-case class Configuration(
-  serverHost: String,
-  serverPort: Int,
-  dbUrl: String
+final case class Configuration(
+  server: ServerConfiguration,
+  database: DatabaseConfiguration,
+)
+
+final case class ServerConfiguration(
+  host: String,
+  port: Int
+)
+
+final case class DatabaseConfiguration(
+  url: String,
+  driver: String,
+  user: String,
+  password: String
 )
 
 object Configuration {
-  def fromSystem: Configuration = Configuration(
-    serverHost = sys.env.getOrElse("NICKEL_HOST", "localhost"),
-    serverPort = sys.env.get("NICKEL_PORT").flatMap(s => Try(s.toInt).toOption).getOrElse(8666),
-    dbUrl = sys.env.getOrElse("NICKEL_DB_URL", "jdbc:hsqldb:mem:nickel")
-  )
+  def load(): Configuration = {
+    val conf = ConfigFactory.load()
+    Configuration(
+      ServerConfiguration(
+        host = conf.getString("server.host"),
+        port = conf.getInt("server.port"),
+      ),
+      DatabaseConfiguration(
+        url = conf.getString("database.url"),
+        driver = conf.getString("database.driver"),
+        user = conf.getString("database.user"),
+        password = conf.getString("database.password")
+      )
+    )
+  }
 }

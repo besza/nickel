@@ -10,6 +10,7 @@ libraryDependencies ++= Vector(
   "com.typesafe.play" %% "play-json" % "2.6.6",
   "org.flywaydb" % "flyway-core" % "4.2.0",
   "org.hsqldb" % "hsqldb" % "2.4.0",
+  "com.typesafe" % "config" % "1.3.1",
   "ch.qos.logback" % "logback-classic" % "1.2.3"
 )
 

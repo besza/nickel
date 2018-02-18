@@ -9,15 +9,17 @@ import slick.jdbc.HsqldbProfile.api._
 
 object Application {
   def main(args: Array[String]): Unit = {
-    val configuration = Configuration.fromSystem
+    val conf = Configuration.load()
 
     val flyway = new Flyway
-    flyway.setDataSource(configuration.dbUrl, "SA", "")
+    flyway.setDataSource(conf.database.url, conf.database.user, conf.database.password)
     flyway.migrate()
 
     val database = Database.forURL(
-      url = configuration.dbUrl,
-      driver = "org.hsqldb.jdbc.JDBCDriver"
+      url = conf.database.url,
+      driver = conf.database.driver,
+      user = conf.database.user,
+      password = conf.database.password
     )
     implicit val system = ActorSystem()
     implicit val materializer = ActorMaterializer()
@@ -37,6 +39,6 @@ object Application {
       pathSingleSlash { getFromResource("webroot/index.html") } ~
       getFromResourceDirectory("webroot")
 
-    Http().bindAndHandle(route, configuration.serverHost, configuration.serverPort)
+    Http().bindAndHandle(route, conf.server.host, conf.server.port)
   }
 }
