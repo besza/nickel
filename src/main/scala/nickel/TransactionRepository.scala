@@ -39,7 +39,7 @@ class TransactionRepository(database: Database)(implicit ec: ExecutionContext) {
     val accountFiltered = account
       .map { a => monthFiltered.filter { t => t.from === a || t.to === a } }
       .getOrElse(monthFiltered)
-    database.run { accountFiltered.result }
+    database.run { accountFiltered.sortBy(_.on).result }
   }
 
   def months: Future[Seq[YearMonth]] =
