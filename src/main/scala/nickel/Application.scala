@@ -15,12 +15,7 @@ object Application {
     flyway.setDataSource(conf.database.url, conf.database.user, conf.database.password)
     flyway.migrate()
 
-    val database = Database.forURL(
-      url = conf.database.url,
-      driver = conf.database.driver,
-      user = conf.database.user,
-      password = conf.database.password
-    )
+    val database = Database.forConfig("database")
     implicit val system = ActorSystem()
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
