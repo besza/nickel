@@ -52,6 +52,21 @@ class TransactionRepository(database: Database)(implicit ec: ExecutionContext) {
         .map(_.map { case (y, m) => YearMonth.of(y, m) })
     }
 
+  def monthlySums(from: Option[Id[Account]] = None, to: Option[Id[Account]] = None): Future[Map[YearMonth, Money]] =
+    database.run {
+      val filtered = (from, to) match {
+        case (Some(f), Some(t)) => table.filter(_.from === f).filter(_.to === t)
+        case (Some(f), None) => table.filter(_.from === f)
+        case (None, Some(t)) => table.filter(_.to === t)
+        case (None, None) => table
+      }
+      filtered
+        .groupBy { t => (DbFun.year(t.on), DbFun.month(t.on)) }
+        .map { case ((year, month), group) => (year, month, group.map(_.amount).sum)}
+        .result
+        .map(_.collect { case (year, month, Some(sum)) => (YearMonth.of(year, month), sum)}.toMap)
+    }
+
   def create(transaction: Transaction): Future[StoredTransaction] = {
     val createdAt = Instant.now
     database.run { insert += StoredTransaction(Id(0), createdAt, transaction) }

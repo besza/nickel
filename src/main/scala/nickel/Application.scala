@@ -23,7 +23,7 @@ object Application {
     val accountRepository = new AccountRepository(database)
     val transactionRepository = new TransactionRepository(database)
 
-    val accountController = new AccountController(accountRepository)
+    val accountController = new AccountController(accountRepository, transactionRepository)
     val transactionController = new TransactionController(transactionRepository)
 
     val route =
