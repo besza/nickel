@@ -1,7 +1,5 @@
 package nickel.common
 
-import nickel.{ApiResponse, Id}
-
 import akka.http.scaladsl.server.Directives.{as, complete, entity}
 import akka.http.scaladsl.server.PathMatchers.LongNumber
 import akka.http.scaladsl.server.{Directive1, PathMatcher1, StandardRoute}

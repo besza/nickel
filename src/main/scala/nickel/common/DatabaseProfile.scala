@@ -1,6 +1,6 @@
 package nickel.common
 
-import nickel.{Id, Money}
+import nickel.Money
 
 import java.sql.{Date, Timestamp}
 import java.time.{Instant, LocalDate}

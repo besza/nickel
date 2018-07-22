@@ -1,3 +1,5 @@
+import nickel.common.{Id, Validator}
+
 import akka.http.scaladsl.server.{RejectionError, ValidationRejection}
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromStringUnmarshaller, Unmarshaller}
 import play.api.libs.json._

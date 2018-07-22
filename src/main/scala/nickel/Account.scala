@@ -1,5 +1,7 @@
 package nickel
 
+import nickel.common.{Id, Validator}
+
 import play.api.libs.json._
 
 case class Account(

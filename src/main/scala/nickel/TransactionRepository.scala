@@ -1,8 +1,9 @@
 package nickel
 
-import common.DatabaseProfile.api._
-import common.DatabaseProfile.Mappers._
-import common.DatabaseProfile.Funs
+import nickel.common.DatabaseProfile.Funs
+import nickel.common.DatabaseProfile.Mappers._
+import nickel.common.DatabaseProfile.api._
+import nickel.common.Id
 
 import java.time.{Instant, LocalDate, YearMonth}
 import scala.concurrent.ExecutionContext

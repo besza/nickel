@@ -1,5 +1,7 @@
 package nickel
 
+import nickel.common.Id
+
 import akka.http.scaladsl.server.Directives._
 
 import java.time.YearMonth

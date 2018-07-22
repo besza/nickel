@@ -1,7 +1,8 @@
 package nickel
 
-import common.DatabaseProfile.api._
-import common.DatabaseProfile.Mappers._
+import nickel.common.DatabaseProfile.Mappers._
+import nickel.common.DatabaseProfile.api._
+import nickel.common.Id
 
 private class AccountTable(tag: Tag) extends Table[Account.Stored](tag, "account") {
   def id = column[Id[Account]]("id", O.PrimaryKey, O.AutoInc)

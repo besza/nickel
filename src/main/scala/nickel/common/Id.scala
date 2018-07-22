@@ -1,4 +1,4 @@
-package nickel
+package nickel.common
 
 import play.api.libs.json._
 

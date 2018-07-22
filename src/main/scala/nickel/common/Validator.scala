@@ -1,4 +1,4 @@
-package nickel
+package nickel.common
 
 final case class Validator[T](f: T => Either[String, T]) extends AnyVal
 

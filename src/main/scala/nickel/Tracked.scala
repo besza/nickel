@@ -1,5 +1,7 @@
 package nickel
 
+import nickel.common.Id
+
 import play.api.libs.json.{Json, OWrites}
 
 import java.time.Instant

@@ -1,5 +1,7 @@
 package nickel
 
+import nickel.common.Id
+
 import play.api.libs.json.{Json, OWrites}
 
 trait Stored[T] {

@@ -1,4 +1,4 @@
-package nickel
+package nickel.common
 
 import akka.http.javadsl.model.HttpEntities
 import akka.http.scaladsl.marshalling.{Marshaller, ToResponseMarshaller}

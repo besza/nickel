@@ -1,8 +1,8 @@
 package nickel
 
-import scala.util.matching.Regex
-
 import play.api.libs.json._
+
+import scala.util.matching.Regex
 
 case class Money(cents: Int) extends AnyVal {
   override def toString: String = {
