@@ -23,14 +23,13 @@ object Application {
     val accountRepository = new AccountRepository(database)
     val transactionRepository = new TransactionRepository(database)
 
-    val accountController = new AccountController(accountRepository, transactionRepository)
+    val accountController = new AccountController(accountRepository)
     val transactionController = new TransactionController(transactionRepository)
 
+    val routing = new Routing(accountController, transactionController)
+
     val route =
-      pathPrefix("api") {
-        accountController.routes ~
-        transactionController.routes
-      } ~
+      pathPrefix("api") { routing.routes } ~
       pathSingleSlash { getFromResource("webroot/index.html") } ~
       getFromResourceDirectory("webroot")
 
