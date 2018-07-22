@@ -1,6 +1,6 @@
 package nickel
 
-import play.api.libs.json.{OWrites, Writes}
+import play.api.libs.json.{Json, OWrites}
 
 trait Stored[T] {
   val id: Id[T]
@@ -8,6 +8,8 @@ trait Stored[T] {
 
 object Stored {
   def writes[T](w: OWrites[T]): OWrites[T with Stored[T]] = OWrites { x =>
-    w.writes(x) + ("id", implicitly[Writes[Id[T]]].writes(x.id))
+    Json.obj(
+      "id" -> x.id
+    ) ++ w.writes(x)
   }
 }

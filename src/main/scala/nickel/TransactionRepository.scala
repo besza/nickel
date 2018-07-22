@@ -5,7 +5,7 @@ import slick.jdbc.HsqldbProfile.api._
 import java.time.{Instant, LocalDate, YearMonth}
 import scala.concurrent.{ExecutionContext, Future}
 
-private class TransactionTable(tag: Tag) extends Table[StoredTransaction](tag, "transaction") {
+private class TransactionTable(tag: Tag) extends Table[Transaction.Tracked](tag, "transaction") {
   def id = column[Id[Transaction]]("id", O.PrimaryKey, O.AutoInc)
   def createdAt = column[Instant]("created_at")
   def from = column[Id[Account]]("from")
@@ -17,22 +17,21 @@ private class TransactionTable(tag: Tag) extends Table[StoredTransaction](tag, "
   def * = (id, createdAt, from, to, on, amount, description) <> ((fromDb _).tupled, toDb)
   def fromDb(id: Id[Transaction], createdAt: Instant, from: Id[Account], to: Id[Account], on: LocalDate,
     amount: Money, description: String) =
-    StoredTransaction(id, createdAt, Transaction(from, to, on, amount, description))
-  def toDb(t: StoredTransaction) =
-    Some((t.id, t.createdAt, t.transaction.from, t.transaction.to, t.transaction.on,
-      t.transaction.amount, t.transaction.description))
+    Transaction(from, to, on, amount, description).tracked(id, createdAt)
+  def toDb(t: Transaction.Tracked) =
+    Some((t.id, t.createdAt, t.from, t.to, t.on, t.amount, t.description))
 }
 
 class TransactionRepository(database: Database)(implicit ec: ExecutionContext) {
   private val table = TableQuery[TransactionTable]
   private val insert =
     table returning table.map(_.id) into
-    ((inserted, id) => StoredTransaction(id, inserted.createdAt, inserted.transaction))
+    ((inserted, id) => inserted.tracked(id, inserted.createdAt))
 
-  def single(id: Id[Transaction]): Future[Option[StoredTransaction]] =
+  def single(id: Id[Transaction]): Future[Option[Transaction.Tracked]] =
     database.run { table.filter(_.id === id).result.headOption }
 
-  def filtered(month: Option[YearMonth], account: Option[Id[Account]]): Future[Seq[StoredTransaction]] = {
+  def filtered(month: Option[YearMonth], account: Option[Id[Account]]): Future[Seq[Transaction.Tracked]] = {
     val monthFiltered = month
       .map { m => table.filter { t => DbFun.year(t.on) === m.getYear && DbFun.month(t.on) === m.getMonthValue } }
       .getOrElse(table)
@@ -67,12 +66,12 @@ class TransactionRepository(database: Database)(implicit ec: ExecutionContext) {
         .map(_.collect { case (year, month, Some(sum)) => (YearMonth.of(year, month), sum)}.toMap)
     }
 
-  def create(transaction: Transaction): Future[StoredTransaction] = {
+  def create(transaction: Transaction): Future[Transaction.Tracked] = {
     val createdAt = Instant.now
-    database.run { insert += StoredTransaction(Id(0), createdAt, transaction) }
+    database.run { insert += transaction.tracked(Id(0), createdAt) }
   }
 
-  def update(id: Id[Transaction], transaction: Transaction): Future[Option[StoredTransaction]] =
+  def update(id: Id[Transaction], transaction: Transaction): Future[Option[Transaction.Tracked]] =
     database
       .run {
         table
