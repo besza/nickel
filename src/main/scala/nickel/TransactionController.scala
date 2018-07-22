@@ -8,31 +8,25 @@ import scala.concurrent.ExecutionContext
 class TransactionController(
   transactionRepository: TransactionRepository
 )(implicit ec: ExecutionContext) {
+  import common.Matchers._
+
   val routes =
-    pathPrefix("transactions") {
-      pathEnd {
-        (get & parameters('month.as[YearMonth].?, 'account.as[Id[Account]].?)) { (month, account) =>
-          complete { transactionRepository.filtered(month, account).map(Ok(_)) }
-        } ~
-        (post & entity(as[Transaction])) { transaction =>
-          complete { transactionRepository.create(transaction).map(Created(_)) }
-        }
-      } ~
-      path(LongNumber.map(Id[Transaction])) { id =>
-        (put & entity(as[Transaction])) { transaction =>
-          complete { transactionRepository.update(id, transaction).map {
-            case Some(updated) => Ok(updated)
-            case None => NotFound
-          } }
-        } ~
-        delete {
-          complete { transactionRepository.delete(id).map(if (_) NoContent else NotFound) }
-        }
-      } ~
-      path("months") {
-        get {
-          complete { transactionRepository.months.map(Ok(_)) }
-        }
-      }
+    (get & path("transactions") & parameters("month".as[YearMonth].?, "account".as[Id[Account]].?)) { (month, account) =>
+      transactionRepository.filtered(month, account).map(Ok(_)).route
+    } ~
+    (post & path("transactions") & body[Transaction]) { transaction =>
+      transactionRepository.create(transaction).map(Created(_)).route
+    } ~
+    (put & path("transactions" / IdPath[Transaction]) & body[Transaction]) { (id, transaction) =>
+      transactionRepository.update(id, transaction).map {
+        case Some(updated) => Ok(updated)
+        case None => NotFound
+      }.route
+    } ~
+    (delete & path("transactions" / IdPath[Transaction])) { id =>
+      transactionRepository.delete(id).map(if (_) NoContent else NotFound).route
+    } ~
+    (get & path("transactions" / "months")) {
+      transactionRepository.months.map(Ok(_)).route
     }
 }

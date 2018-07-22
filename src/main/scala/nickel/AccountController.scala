@@ -8,35 +8,27 @@ class AccountController(
   accountRepository: AccountRepository,
   transactionRepository: TransactionRepository
 )(implicit ec: ExecutionContext) {
+  import common.Matchers._
+
   val routes =
-    pathPrefix("accounts") {
-      pathEnd {
-        get {
-          complete { accountRepository.all.map(Ok(_)) }
-        } ~
-        (post & entity(as[Account])) { account =>
-          complete { accountRepository.create(account).map(Created(_)) }
+    (get & path("accounts")) {
+      accountRepository.all.map(Ok(_)).route
+    } ~
+    (post & path("accounts") & body[Account]) { account =>
+      accountRepository.create(account).map(Created(_)).route
+    } ~
+    (get & path("accounts" / IdPath[Account] / "balance") & parameters("with".as[Id[Account]].?)) { (accountId, withOpt) =>
+      (for {
+        sumsFrom <- transactionRepository.monthlySums(from = Some(accountId), to = withOpt)
+        sumsTo <- transactionRepository.monthlySums(to = Some(accountId), from = withOpt)
+      } yield {
+        val months = sumsFrom.keySet ++ sumsTo.keySet
+        val balances = months.toList.sorted.map { month =>
+          val in = sumsTo.getOrElse(month, Money(0))
+          val out = sumsFrom.getOrElse(month, Money(0))
+          MonthlyBalance(month, in, out, Money(in.cents - out.cents))
         }
-      } ~
-      pathPrefix(LongNumber.map(Id[Account])) { accountId =>
-        pathPrefix("balance") {
-          (get & parameters("with".as[Id[Account]].?)) { withOpt =>
-            complete {
-              for {
-                sumsFrom <- transactionRepository.monthlySums(from = Some(accountId), to = withOpt)
-                sumsTo <- transactionRepository.monthlySums(to = Some(accountId), from = withOpt)
-              } yield {
-                val months = sumsFrom.keySet ++ sumsTo.keySet
-                val balances = months.toList.sorted.map { month =>
-                  val in = sumsTo.getOrElse(month, Money(0))
-                  val out = sumsFrom.getOrElse(month, Money(0))
-                  MonthlyBalance(month, in, out, Money(in.cents - out.cents))
-                }
-                Ok(balances)
-              }
-            }
-          }
-        }
-      }
+        Ok(balances)
+      }).route
     }
 }
