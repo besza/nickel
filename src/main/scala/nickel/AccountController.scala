@@ -3,12 +3,15 @@ package nickel
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountController(
-  accountRepository: AccountRepository
+  accountRepository: AccountRepository,
+  database: common.DatabaseProfile.api.Database
 )(implicit ec: ExecutionContext) {
 
   def getAll: Future[ApiResponse] =
-    accountRepository.all.map(Ok(_))
+    database.run { accountRepository.all }
+      .map(Ok(_))
 
   def create(account: Account): Future[ApiResponse] =
-    accountRepository.create(account).map(Created(_))
+    database.run { accountRepository.create(account) }
+      .map(Created(_))
 }

@@ -20,11 +20,11 @@ object Application {
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
 
-    val accountRepository = new AccountRepository(database)
-    val transactionRepository = new TransactionRepository(database)
+    val accountRepository = new AccountRepository
+    val transactionRepository = new TransactionRepository
 
-    val accountController = new AccountController(accountRepository)
-    val transactionController = new TransactionController(transactionRepository)
+    val accountController = new AccountController(accountRepository, database)
+    val transactionController = new TransactionController(transactionRepository, database)
 
     val routing = new Routing(accountController, transactionController)
 
