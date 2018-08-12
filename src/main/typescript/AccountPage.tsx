@@ -1,34 +1,55 @@
 import * as React from "react";
 
-interface State {
-  readonly accounts: ReadonlyArray<Account>
-}
+import * as AccountApi from "./Api/AccountApi"
+import { Account } from "./Models"
 
-interface Account {
-  readonly id: string,
-  readonly name: string
+interface State {
+  readonly accounts: ReadonlyArray<Account>,
+  readonly newName: string
 }
 
 export default class AccountPage extends React.Component<{}, State> {
-  constructor() {
-    super({})
-    this.state = { accounts: [] }
+  constructor(props: {}) {
+    super(props)
+    this.state = { accounts: [], newName: "" }
   }
 
-  componentDidMount() {
-    fetch("http://localhost:8081/api/accounts")
-      .then(response => response.json())
-      .then(json => this.setState((st, {}) => ({ accounts: json })))
-      .catch(reason => console.log(reason))
+  componentDidMount(): void {
+    AccountApi.getAll().then(accounts =>
+      this.setState({ accounts: accounts })
+    )
+  }
+
+  private newNameChanged = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const newName = event.target.value  
+    this.setState({ newName: newName })
+  }
+
+  private formSubmitted = (event: React.FormEvent<any>): void => {
+    event.preventDefault()
+    const newAccount = { name: this.state.newName }
+    AccountApi.create(newAccount).then(createdAccount => 
+      this.setState((prevState, {}) => ({
+        accounts: prevState.accounts.concat([createdAccount]), 
+        newName: "" 
+      }))
+    )
   }
 
   render() {
     return (
-      <ul> { 
-        this.state.accounts.map(
-          account => <li>{account.name}</li>
-        )
-      } </ul>
+      <div>
+        <ul> { 
+          this.state.accounts.map(account => 
+            <li key={account.id}>{account.name}</li>
+          )
+        } </ul>
+        <form onSubmit={this.formSubmitted} >
+          <input value={this.state.newName} onChange={this.newNameChanged} 
+            type="text" placeholder="Account name" />
+          <button type="submit">Create</button>
+        </form>
+      </div>
     )
   }
 }

@@ -2,8 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "module": "commonjs",
+    "target": "es2015",
     "strict": true,
-    "noImplicitAny": true,
+    "noUnusedLocals": true,
     "removeComments": true,
     "preserveConstEnums": true,
     "jsx": "react",
