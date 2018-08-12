@@ -2,6 +2,7 @@ package nickel
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.headers.{HttpOrigin, `Access-Control-Allow-Origin`}
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import org.flywaydb.core.Flyway
@@ -32,7 +33,9 @@ object Application {
       pathPrefix("api") { routing.routes } ~
       pathSingleSlash { getFromResource("webroot/index.html") } ~
       getFromResourceDirectory("webroot")
+    val corsRoute = route
+      .map(_.addHeader(`Access-Control-Allow-Origin`(HttpOrigin("http://localhost:8080"))))
 
-    Http().bindAndHandle(route, conf.server.host, conf.server.port)
+    Http().bindAndHandle(corsRoute, conf.server.host, conf.server.port)
   }
 }
