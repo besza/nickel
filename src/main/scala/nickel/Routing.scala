@@ -2,6 +2,8 @@ package nickel
 
 import nickel.common.Id
 
+import akka.http.scaladsl.model.{HttpMethods, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`}
 import akka.http.scaladsl.server.Directives._
 
 import java.time.YearMonth
@@ -14,6 +16,10 @@ class Routing(
   import common.Matchers._
 
   def routes =
+    options {
+      complete(HttpResponse(StatusCodes.OK)
+        .withHeaders(`Access-Control-Allow-Methods`(HttpMethods.OPTIONS, HttpMethods.POST, HttpMethods.PUT, HttpMethods.GET, HttpMethods.DELETE)))
+    } ~
     (get & path("accounts")) {
       accountController.getAll.route
     } ~
