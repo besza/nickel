@@ -49,6 +49,13 @@ export default class TransactionPage extends React.Component<{}, State> {
     )
   }
 
+  private deleteTransaction = (id: Id<Transaction>): void => {
+    TransactionApi.del(id).then(_ => {
+      const remainingTransactions = this.state.transactions.filter(t => t.id !== id)
+      this.setState({ transactions: remainingTransactions })
+    })
+  }
+
   private findAccountName = (id: Id<Account>): string => {
     const account = this.state.accounts.find(account => account.id === id)
     return account == null ? "" : account.name
@@ -94,6 +101,7 @@ export default class TransactionPage extends React.Component<{}, State> {
                   <td>{transaction.amount}</td>
                   <td>{transaction.description}</td>
                   <td>{transaction.createdAt}</td>
+                  <td><button onClick={(_) => this.deleteTransaction(transaction.id)}>Delete</button></td>
                 </tr>
               )
             }

@@ -12,6 +12,10 @@ export function get(month?: string, accountId?: Id<Account>): Promise<Transactio
   return apiFetch(uri)
 }
 
+export function del(id: Id<Transaction>): Promise<void> {
+  return apiFetch("api/transactions/" + id, { method: "DELETE" })
+}
+
 export function getMonths(): Promise<string[]> {
   return apiFetch("api/transactions/months")
 }

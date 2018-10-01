@@ -6,7 +6,7 @@ export default function apiFetch(uri: string, init?: RequestInit): Promise<any> 
   return fetch(url, init)
     .then(response =>
       response.ok
-        ? response.json()
+        ? response.text().then(text => text === "" ? undefined : JSON.parse(text))
         : Promise.reject(`${response.status} ${response.statusText}`)
     )
 }
