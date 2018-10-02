@@ -12,6 +12,13 @@ export function get(month?: string, accountId?: Id<Account>): Promise<Transactio
   return apiFetch(uri)
 }
 
+export function create(newTransaction: NewTransaction): Promise<void> {
+  return apiFetch("api/transactions", {
+    method: "POST",
+    body: JSON.stringify(newTransaction)
+  })
+}
+
 export function update(id: Id<Transaction>, newTransaction: NewTransaction): Promise<void> {
   return apiFetch("api/transactions/" + id, {
     method: "PUT",

@@ -1,8 +1,8 @@
 import * as React from "react";
 
-import * as AccountApi from "./Api/AccountApi"
-import * as TransactionApi from "./Api/TransactionApi"
-import { Account, Id, NewTransaction, Transaction } from "./Models"
+import * as AccountApi from "../Api/AccountApi"
+import * as TransactionApi from "../Api/TransactionApi"
+import { Account, Id, NewTransaction, Transaction } from "../Models"
 
 interface State {
   transactions: Transaction[],
