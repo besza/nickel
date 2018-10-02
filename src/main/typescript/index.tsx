@@ -2,13 +2,15 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import { HashRouter as Router, Route, Link } from 'react-router-dom'
 
+import 'bootstrap/dist/css/bootstrap.min.css'
+
 import AccountPage from "./Pages/AccountPage"
 import NewTransactionPage from "./Pages/NewTransactionPage"
 import TransactionPage from "./Pages/TransactionPage"
 
 ReactDOM.render(
   <Router>
-    <div>
+    <div className="container">
       <ul>
         <li><Link to="/new-transaction">New transaction</Link></li>
         <li><Link to="/accounts">Accounts</Link></li>

@@ -124,8 +124,8 @@ export default class TransactionPage extends React.Component<{}, State> {
             )
           }
         </select>
-        <table>
-          <thead>
+        <table className="table table-sm">
+          <thead className="thead-light">
             <tr>
               <th>Day of transaction</th>
               <th>From</th>
@@ -133,6 +133,7 @@ export default class TransactionPage extends React.Component<{}, State> {
               <th>Amount</th>
               <th>Description</th>
               <th>Time of entry</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
