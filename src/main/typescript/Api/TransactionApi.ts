@@ -1,5 +1,5 @@
 import apiFetch from "./ApiFetch"
-import { Account, Id, Transaction } from "../Models"
+import { Account, Id, NewTransaction, Transaction } from "../Models"
 
 export function get(month?: string, accountId?: Id<Account>): Promise<Transaction[]> {
   const params =
@@ -10,6 +10,13 @@ export function get(month?: string, accountId?: Id<Account>): Promise<Transactio
     .join("&")
   const uri = "api/transactions?" + params
   return apiFetch(uri)
+}
+
+export function update(id: Id<Transaction>, newTransaction: NewTransaction): Promise<void> {
+  return apiFetch("api/transactions/" + id, {
+    method: "PUT",
+    body: JSON.stringify(newTransaction)
+  })
 }
 
 export function del(id: Id<Transaction>): Promise<void> {
