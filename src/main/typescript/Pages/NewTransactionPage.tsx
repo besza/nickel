@@ -60,31 +60,56 @@ export default class TransactionPage extends React.Component<{}, State> {
     return (
       <div>
         <form onSubmit={this.createTransaction}>
-          <label>From</label>
-          <select onChange={(e) => this.editTransactionField("from", e)} value={this.state.newTransaction.from}>
-            {
-              this.state.accounts.map(account =>
-                <option key={account.id} value={account.id}>{account.name}</option>
-              )
-            }
-          </select>
+          <div className="col-lg-6 form-group">
+            <label>From</label>
+            <select className="form-control"
+              onChange={(e) => this.editTransactionField("from", e)}
+              value={this.state.newTransaction.from}>
+              {
+                this.state.accounts.map(account =>
+                  <option key={account.id} value={account.id}>{account.name}</option>
+                )
+              }
+            </select>
+          </div>
 
-          <label>To</label>
-          <select onChange={(e) => this.editTransactionField("to", e)} value={this.state.newTransaction.to}>
-            {
-              this.state.accounts.map(account =>
-                <option key={account.id} value={account.id}>{account.name}</option>
-              )
-            }
-          </select>
+          <div className="col-lg-6 form-group">
+            <label>To</label>
+            <select className="form-control"
+              onChange={(e) => this.editTransactionField("to", e)}
+              value={this.state.newTransaction.to}>
+              {
+                this.state.accounts.map(account =>
+                  <option key={account.id} value={account.id}>{account.name}</option>
+                )
+              }
+            </select>
+          </div>
 
-          <input type="date" value={this.state.newTransaction.on} onChange={(e) => this.editTransactionField("on", e)} />
+          <div className="col-lg-6 form-group">
+            <label>Date of transaction</label>
+            <input type="date" className="form-control"
+              value={this.state.newTransaction.on}
+              onChange={(e) => this.editTransactionField("on", e)} />
+          </div>
 
-          <input type="number" step="0.01" placeholder="Amount" value={this.state.newTransaction.amount} onChange={(e) => this.editTransactionField("amount", e)} />
+          <div className="col-lg-6 form-group">
+            <label>Amount</label>
+            <input type="number" step="0.01" className="form-control"
+              value={this.state.newTransaction.amount}
+              onChange={(e) => this.editTransactionField("amount", e)} />
+          </div>
 
-          <input placeholder="Description" value={this.state.newTransaction.description} onChange={(e) => this.editTransactionField("description", e)} />
+          <div className="col-lg-6 form-group">
+            <label>Description</label>
+            <input className="form-control"
+              value={this.state.newTransaction.description}
+              onChange={(e) => this.editTransactionField("description", e)} />
+          </div>
 
-          <button type="submit">Create</button>
+          <div className="col-lg-6 form-group">
+            <button className="btn-lg btn-primary">Create</button>
+          </div>
         </form>
       </div>
     )

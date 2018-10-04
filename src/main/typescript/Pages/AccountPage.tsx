@@ -39,16 +39,20 @@ export default class AccountPage extends React.Component<{}, State> {
   render() {
     return (
       <div>
-        <ul> {
-          this.state.accounts.map(account =>
-            <li key={account.id}>{account.name}</li>
-          )
-        } </ul>
-        <form onSubmit={this.formSubmitted} >
-          <input value={this.state.newName} onChange={this.newNameChanged}
-            type="text" placeholder="Account name" />
-          <button type="submit">Create</button>
+        <form className="form-inline mb-3" onSubmit={this.formSubmitted} >
+          <input type="text" placeholder="Account name" className="form-control mr-2"
+            value={this.state.newName}
+            onChange={this.newNameChanged} />
+          <button type="submit" className="btn btn-primary">Create</button>
         </form>
+
+        <ul className="list-group">
+          {
+            this.state.accounts.map(account =>
+              <li key={account.id} className="list-group-item">{account.name}</li>
+            )
+          }
+        </ul>
       </div>
     )
   }
