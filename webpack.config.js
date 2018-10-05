@@ -4,7 +4,7 @@ module.exports = {
   entry: "./src/main/typescript/index.tsx",
   output: {
     filename: "bundle.js",
-    path: __dirname + "/target/webroot"
+    path: __dirname + "/target/scala-2.12/classes/webroot"
   },
 
   devtool: "source-map",
