@@ -33,17 +33,35 @@ class TransactionController(
     database.run { transactionRepository.months }
       .map(Ok(_))
 
-  def getBalance(accountId: Id[Account], withAccountId: Option[Id[Account]]): Future[ApiResponse[Seq[MonthlyBalance]]] =
-    for {
-      sumsFrom <- database.run { transactionRepository.monthlySums(from = Some(accountId), to = withAccountId) }
-      sumsTo <- database.run { transactionRepository.monthlySums(to = Some(accountId), from = withAccountId) }
-    } yield {
-      val months = sumsFrom.keySet ++ sumsTo.keySet
-      val balances = months.toList.sorted.map { month =>
-        val in = sumsTo.getOrElse(month, Money(0))
-        val out = sumsFrom.getOrElse(month, Money(0))
-        MonthlyBalance(month, in, out, Money(in.cents - out.cents))
-      }
-      Ok(balances)
+  def getBalance(refAccountId: Id[Account]): Future[ApiResponse[Seq[MonthlyBalance]]] =
+    database.run(transactionRepository.monthlySums).map { monthlySums =>
+      val monthlyAccountBalances = monthlySums
+        .toList
+        .collect {
+          case ((month, from, to), amount) if from == refAccountId =>
+              (month, to, Money(-amount.cents))
+          case ((month, from, to), amount) if to == refAccountId =>
+              (month, from, amount)
+        }
+      val occuringAccountIds = monthlyAccountBalances.map(_._2).distinct.sortBy(_.value)
+      val monthlyBalances = monthlyAccountBalances
+        .groupBy(_._1)
+        .map {
+          case (month, allBalances) =>
+            val accountBalances = allBalances
+              .groupBy(_._2)
+              .map { case (accountId, monthsAccountIdsBalances) => (accountId, Money(monthsAccountIdsBalances.map(_._3.cents).sum)) }
+            val inBalance = Money(accountBalances.values.map(_.cents).filter(_ > 0).sum)
+            val outBalance = Money(-accountBalances.values.map(_.cents).filter(_ < 0).sum)
+            MonthlyBalance(
+              month = month,
+              in = inBalance,
+              out = outBalance,
+              accountBalances = occuringAccountIds.map(a => (a, accountBalances.getOrElse(a, Money(0)))),
+              balance = Money(inBalance.cents - outBalance.cents)
+            )
+          }
+        .toSeq
+      Ok(monthlyBalances)
     }
 }

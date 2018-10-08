@@ -1,13 +1,15 @@
 package nickel
 
-import play.api.libs.json.{Json, Writes}
-
 import java.time.YearMonth
+
+import nickel.common.Id
+import play.api.libs.json.{Json, Writes}
 
 case class MonthlyBalance(
   month: YearMonth,
   in: Money,
   out: Money,
+  accountBalances: Seq[(Id[Account], Money)],
   balance: Money
 )
 

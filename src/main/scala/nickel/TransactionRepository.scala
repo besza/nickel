@@ -52,18 +52,12 @@ class TransactionRepository(implicit ec: ExecutionContext) {
       .result
       .map(_.map { case (y, m) => YearMonth.of(y, m) })
 
-  def monthlySums(from: Option[Id[Account]] = None, to: Option[Id[Account]] = None): DBIO[Map[YearMonth, Money]] = {
-    val filtered = (from, to) match {
-      case (Some(f), Some(t)) => table.filter(_.from === f).filter(_.to === t)
-      case (Some(f), None) => table.filter(_.from === f)
-      case (None, Some(t)) => table.filter(_.to === t)
-      case (None, None) => table
-    }
-    filtered
-      .groupBy { t => (Funs.year(t.on), Funs.month(t.on)) }
-      .map { case ((year, month), group) => (year, month, group.map(_.amount).sum)}
+  def monthlySums: DBIO[Map[(YearMonth, Id[Account], Id[Account]), Money]] = {
+    table
+      .groupBy { row => (Funs.year(row.on), Funs.month(row.on), row.from, row.to) }
+      .map { case ((year, month, from, to), group) => (year, month, from, to, group.map(_.amount).sum)}
       .result
-      .map(_.collect { case (year, month, Some(sum)) => (YearMonth.of(year, month), sum)}.toMap)
+      .map(_.collect { case (year, month, from, to, Some(sum)) => ((YearMonth.of(year, month), from, to), sum)}.toMap)
   }
 
   def create(transaction: Transaction): DBIO[Transaction.Tracked] = {

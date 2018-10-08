@@ -26,8 +26,8 @@ class Routing(
     (post & path("accounts") & body[Account]) { account =>
       accountController.create(account).route
     } ~
-    (get & path("accounts" / IdPath[Account] / "balance") & parameters("with".as[Id[Account]].?)) { (accountId, withOpt) =>
-      transactionController.getBalance(accountId, withOpt).route
+    (get & path("accounts" / IdPath[Account] / "balance")) { accountId =>
+      transactionController.getBalance(accountId).route
     } ~
     (get & path("transactions") & parameters("month".as[YearMonth].?, "account".as[Id[Account]].?)) { (month, accountId) =>
       transactionController.getAll(month, accountId).route
