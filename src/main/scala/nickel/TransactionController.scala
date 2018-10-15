@@ -62,6 +62,7 @@ class TransactionController(
             )
           }
         .toSeq
+        .sortBy(_.month)
       Ok(monthlyBalances)
     }
 }

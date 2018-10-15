@@ -22,3 +22,11 @@ export interface Transaction extends NewTransaction {
   readonly id: Id<Transaction>,
   readonly createdAt: string
 }
+
+export interface MonthlyBalance {
+  readonly month: string,
+  readonly in: Money,
+  readonly out: Money,
+  readonly balance: Money,
+  readonly accountBalances: string[][]
+}

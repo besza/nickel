@@ -5,6 +5,7 @@ import { HashRouter as Router, Route, Link } from 'react-router-dom'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
 import AccountPage from "./Pages/AccountPage"
+import BalancePage from "./Pages/BalancePage"
 import NewTransactionPage from "./Pages/NewTransactionPage"
 import TransactionPage from "./Pages/TransactionPage"
 
@@ -18,6 +19,7 @@ ReactDOM.render(
             <li className="nav-item"><Link to="/new-transaction" className="nav-link">New transaction</Link></li>
             <li className="nav-item"><Link to="/accounts" className="nav-link">Accounts</Link></li>
             <li className="nav-item"><Link to="/transactions" className="nav-link">Transactions</Link></li>
+            <li className="nav-item"><Link to="/balances" className="nav-link">Balances</Link></li>
           </ul>
         </nav>
 
@@ -26,6 +28,7 @@ ReactDOM.render(
           <Route path="/new-transaction" component={NewTransactionPage} />
           <Route path="/accounts" component={AccountPage} />
           <Route path="/transactions" component={TransactionPage} />
+          <Route path="/balances" component={BalancePage} />
         </div>
       </div>
     </div>
